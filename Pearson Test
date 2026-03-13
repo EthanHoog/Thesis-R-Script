@@ -1,0 +1,41 @@
+# --- 7a. Pearson Correlation Analysis ---
+# Testing the relationship between leaf loss and species richness
+cor_test_results <- cor.test(Leafpack_Decomposition$Leaf.Loss_.g.day., 
+                             Leafpack_Decomposition$Macroinvert_Richness,
+                             method = "pearson", 
+                             use = "complete.obs")
+
+print(cor_test_results)
+
+# [RESULT ANNOTATION]
+# t = -1.0398, df = 3, p-value = 0.3749
+# Correlation (r) = -0.5147
+# INTERPRETATION: There is no significant correlation (p > 0.05) between 
+# leaf litter loss and macroinvertebrate species richness.
+
+
+# --- 7b. Visualization (Scatter Plot with Regression Line) ---
+# Setting margins to ensure labels and legend fit properly
+par(mar=c(4, 5, 2, 6) + 0.1, xpd=TRUE)
+
+plot(Leafpack_Decomposition$Leaf.Loss_.g.day.,
+     Leafpack_Decomposition$Macroinvert_Richness,
+     xlab = "Leaf Litter Loss (g/day)",
+     ylab = "Macroinvertebrate Species Richness",
+     cex.lab = 0.85,    # Adjusted font size
+     font.lab = 2,      # Bold axis titles
+     pch = 19,
+     col = ifelse(Leafpack_Decomposition$Stream_Class == "Restored", "blue", "darkgreen"),
+     las = 1)
+
+# Adding the linear regression line
+abline(lm(Macroinvert_Richness ~ Leaf.Loss_.g.day., data = Leafpack_Decomposition), 
+       lwd = 2)
+
+# Placing the legend outside the plot area
+legend(x = max(Leafpack_Decomposition$Leaf.Loss_.g.day.) * 1.02, 
+       y = max(Leafpack_Decomposition$Macroinvert_Richness),                
+       legend = c("Restored", "Reference"),
+       col = c("blue", "darkgreen"),
+       pch = 19,
+       bty = "n")
