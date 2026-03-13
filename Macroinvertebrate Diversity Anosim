@@ -1,0 +1,49 @@
+# ==============================================================================
+# PART 5: ANOSIM (Analysis of Similarities)
+# ==============================================================================
+# Combining Stream Type and Month into a single factor for community analysis
+MacroGroups2025$Group <- paste(MacroGroups2025$Stream.Type, MacroGroups2025$Month, sep = "_")
+group <- MacroGroups2025$Group
+
+# Running ANOSIM based on Bray-Curtis distance
+anosim_result <- anosim(bc_dist, grouping = group, permutations = 999)
+summary(anosim_result)
+
+# [RESULT ANNOTATION - ANOSIM]
+# R statistic: 0.3919  (Indicates moderate separation between groups)
+# Significance: 0.001  (Strong evidence that differences are real, not random)
+#
+# Dissimilarity Median Ranks:
+# - Between groups: 334 (Higher values = more dissimilar)
+# - Restored_May: 68 (Low within-group dissimilarity; samples are very similar)
+# - Reference_May: 407 (Higher variability within this group)
+
+
+# ==============================================================================
+# PART 6: SIMPER (Similarity Percentages)
+# ==============================================================================
+# Identifying which taxa contribute most to the differences between groups
+
+# Extraction function for top contributors
+get_top_taxa <- function(simper_comp, top_n = 5) {
+  df <- as.data.frame(simper_comp)
+  df$Taxon <- rownames(df)
+  df <- df %>%
+    mutate(MoreAbundantIn = ifelse(ava > avb, "Group A", "Group B")) %>%
+    arrange(desc(average)) %>%
+    slice(1:top_n) %>%
+    select(Taxon, MoreAbundantIn, average, ava, avb, cumsum, p)
+  return(df)
+}
+
+# Run SIMPER and extract top 5 taxa per comparison
+simper_summary <- summary(simper_result)
+all_top_taxa <- lapply(simper_summary, get_top_taxa, top_n = 5)
+all_top_taxa_combined <- do.call(rbind, Map(cbind, Comparison = names(all_top_taxa), all_top_taxa))
+
+# [RESULT ANNOTATION - DOMINANT TAXA PATTERNS]
+# 1. Lirceus: Extremely abundant in Restored streams (hundreds vs. tens)
+# 2. Gammarus: Dominant in Reference and some Nonrestored streams
+# 3. Oligochaeta: Common in Nonrestored, occasionally high in Reference
+# 4. Chironomidae: Moderate abundance present in almost all streams
+# 5. Sphaeriidae: Mostly found in Reference streams
