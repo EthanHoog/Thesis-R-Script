@@ -1,0 +1,42 @@
+# --- PART 1: Data Preparation ---
+Index.and.Captures.complete <- na.omit(Index.and.Captures)
+
+Index.and.Captures.complete$Month <- factor(Index.and.Captures.complete$Month,
+                                             levels = c("April", "May", "June", "July"))
+Index.and.Captures.complete$Year <- factor(Index.and.Captures.complete$Year)
+Index.and.Captures.complete$Stream.Type <- factor(Index.and.Captures.complete$Stream.Type)
+
+# Combine dependent variables for MANOVA
+Y <- cbind(Index.and.Captures.complete$H..of.Macroinvertebrates,
+            Index.and.Captures.complete$Salamander.Captures)
+
+# Run MANOVA (Note: Triggers error if Year/Stream.Type has only 1 level after na.omit)
+model <- manova(Y ~ Month * Year * Stream.Type, data = Index.and.Captures.complete)
+
+
+# --- PART 2: Three-Way ANOVA ---
+capture_model <- aov(Salamander.Captures ~ Stream.Type * Month * Year, 
+                    data = Index.and.Captures)
+
+summary(capture_model)
+
+# SCREENSHOT RESULTS:
+# Df   Sum Sq   Mean Sq   F value   Pr(>F)    
+# Stream.Type          2    358.9    179.44    18.597   3.14e-06 ***
+# Month                2      9.5      4.75     0.493   0.615    
+# Year                 1      1.2      1.16     0.121   0.730    
+# Stream.Type:Month    4     27.0      6.74     0.698   0.598    
+# Stream.Type:Year     2      2.6      1.32     0.136   0.873    
+# Residuals           35    337.7      9.65                      
+
+
+# --- PART 3: Post-hoc Analysis ---
+stream_aov <- aov(Salamander.Captures ~ Stream.Type, data = Index.and.Captures)
+TukeyHSD(stream_aov)
+
+# SCREENSHOT RESULTS ($Stream.Type):
+#                             diff        lwr        upr     p adj
+# Reference-Nonrestored   6.6363636  3.333139   9.939589  0.0000430
+# Restored-Nonrestored    0.1428571 -2.707045   2.992759  0.9918850
+# Restored-Reference     -6.4935065 -9.023152  -3.963861  0.0000005
+
