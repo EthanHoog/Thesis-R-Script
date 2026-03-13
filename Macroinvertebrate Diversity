@@ -1,0 +1,57 @@
+# ==============================================================================
+# PART 4: Macroinvertebrate Shannon Diversity (H') Analysis
+# ==============================================================================
+
+# --- 4a. One-Way ANOVA (Snapshot: May 2025) ---
+# Testing if diversity differs between stream types in a single month
+shannon_model <- aov(H..of.Macroinvertebrates ~ Stream.Type, data = df_2025_may)
+summary(shannon_model)
+
+# SCREENSHOT RESULTS (image_59ba8b.png):
+#              Df  Sum Sq  Mean Sq  F value  Pr(>F)
+# Stream.Type   2  0.4175  0.2087   0.69     0.526
+# Residuals     9  2.7240  0.3027
+# INTERPRETATION: Not significant; H' does not differ between stream types in May.
+
+# Post-hoc for May snapshot
+TukeyHSD(shannon_model)
+
+# SCREENSHOT RESULTS (image_59b7e5.png):
+# Reference-Nonrestored: p adj = 0.695
+# Restored-Nonrestored:  p adj = 0.999
+# Restored-Reference:     p adj = 0.512
+
+
+# --- 4b. Two-Way ANOVA (Full 2025 Dataset) ---
+# Testing effects of Stream Type and Month on diversity
+H_model <- aov(H ~ Stream.Type * Month, data = Index.and.Captures.2025)
+summary(H_model)
+
+# SCREENSHOT RESULTS (image_59b7de.png):
+#                   Df  Sum Sq  Mean Sq  F value  Pr(>F)    
+# Stream.Type        2   0.444   0.2220   0.738   0.4875    
+# Month              2   2.284   1.1419   3.795   0.0353 * # Stream.Type:Month  4   1.136   0.2839   0.944   0.4540    
+# Residuals         27   8.124   0.3009    
+# INTERPRETATION: Only 'Month' significantly influenced diversity (p = 0.035).
+
+
+# --- 4c. Assumption Checks for Two-Way ANOVA ---
+
+# 1. Normality of Residuals
+shapiro.test(residuals(H_model))
+# RESULT: W = 0.966, p-value = 0.3374 (Assumption Met: Residuals are normal)
+
+# 2. Homogeneity of Variance
+library(car)
+leveneTest(H ~ Stream.Type * Month, data = Index.and.Captures.2025)
+# RESULT: F = 0.3918, p-value = 0.9154 (Assumption Met: Variances are equal)
+
+
+# --- 4d. Post-hoc for Significant Factor (Month) ---
+TukeyHSD(aov(H ~ Month, data = Index.and.Captures.2025))
+
+# SCREENSHOT RESULTS (image_59b7a5.png):
+# June-May: p adj = 0.221
+# July-May: p adj = 0.025 (SIGNIFICANT)
+# July-June: p adj = 0.543
+# INTERPRETATION: Diversity was significantly higher in July compared to May.
